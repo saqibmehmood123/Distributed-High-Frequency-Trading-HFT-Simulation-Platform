@@ -72,7 +72,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Get total traded volume (for dashboard)
     @Query("SELECT SUM(o.quantity) FROM Order o WHERE o.symbol = :symbol AND o.status = 'FILLED'")
-    default Double getTradedVolume(@Param("symbol") String symbol) {
+     Double getTradedVolume(@Param("symbol") String symbol) ;
 
 
 
