@@ -1,0 +1,27 @@
+run this    command in parent folder
+
+mvn clean install -U
+
+//////////////
+
+Delete the target folder manually:
+
+bash
+Copy
+rm -rf /home/saqib/Desktop/JavaProjects/HighFrequencyTrading/order-service/target/
+Fix directory permissions:
+
+bash
+Copy
+sudo chown -R $USER:$USER /home/saqib/Desktop/JavaProjects/
+sudo chmod -R 755 /home/saqib/Desktop/JavaProjects/
+Rebuild the project:
+
+bash
+Copy
+cd /home/saqib/Desktop/JavaProjects/HighFrequencyTrading/
+mvn clean package
+
+
+/////////////////////
+
