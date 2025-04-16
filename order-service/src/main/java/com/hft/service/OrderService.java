@@ -1,7 +1,10 @@
 package com.hft.service;
 
 import com.hft.dao.Order;
+import com.hft.dao.OrderStatus;
+import com.hft.exceptionhandling.OrderNotFoundException;
 import com.hft.repository.OrderRepository;
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,4 +51,60 @@ public class OrderService {
     }
 
 
+    // ==== 1. Basic CRUD ====
+
+
+    // ==== 2. Order Book Operations ====
+    public List<Order> getOpenOrdersForSymbol(String symbol) {
+        return orderRepo.findBySymbolAndStatus(symbol, OrderStatus.OPEN);
+    }
+
+    public List<Order> getTopOrders(String symbol, String side) {
+        return orderRepo.findTopOrders(symbol, side);  // Price-time priority
+    }
+
+    // ==== 3. Concurrency & Matching ====
+    @Transactional
+    public Order getOrderForUpdate(Long id) throws OrderNotFoundException {
+        return orderRepo.findByIdForUpdate(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+    }
+
+    @Transactional
+    public void decrementOrderQuantity(Long id, int delta) throws OrderNotFoundException {
+        Order order = getOrderForUpdate(id);  // Pessimistic lock
+        int updatedRows = orderRepo.decrementQuantity(id, delta, order.getVersion() );
+
+        if (updatedRows == 0) {
+            throw new OptimisticLockException("Order quantity update failed due to version conflict");
+        }
+    }
+
+    // ==== 4. Bulk Operations ====
+    public void bulkCancelOrders(String symbol) {
+        orderRepo.cancelAllBySymbol(symbol);
+    }
+
+    public List<Order> batchInsertOrders(List<Order> orders) {
+        return orderRepo.saveAll(orders);
+    }
+
+    // ==== 5. Analytics ====
+    public double getTradedVolume(String symbol) {
+        return orderRepo.getTradedVolume(symbol);
+    }
+
+    public long countOpenOrders(String symbol) {
+        return orderRepo.countOpenOrders(symbol);
+    }
+
+    // ==== Helper Methods ====
+    private void validateOrder(Order order) {
+        if (order.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (!order.getSide().equals("BUY") && !order.getSide().equals("SELL")) {
+            throw new IllegalArgumentException("Side must be BUY or SELL");
+        }
+    }
 }

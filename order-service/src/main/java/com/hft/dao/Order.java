@@ -7,10 +7,12 @@ import java.time.LocalDateTime;
 
 //@Data
 @Entity
-@Table(name = "orders", indexes = {
-        @Index(name = "idx_symbol_status", columnList = "symbol,status"),
-        @Index(name = "idx_side_price", columnList = "side,price")
-})
+@Table(name = "orders"
+//        , indexes = {
+//        @Index(name = "idx_symbol_status", columnList = "symbol,status"),
+//        @Index(name = "idx_side_price", columnList = "side,price")
+//}
+)
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +31,9 @@ public class Order {
     @Version
     private Long version;            // Optimistic locking
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status") // Explicit mapping
+    OrderStatus status;
     public Order() {
           }
 
@@ -41,6 +46,14 @@ public class Order {
         this.createdAt = createdAt;
     }
 
+    public Order(String aapl, int quantity, double price, String buy) {
+        this.symbol = aapl;
+        this.price = price;
+        this.quantity = quantity;
+        this.side = buy;
+    }
+
+    ///
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -53,6 +66,30 @@ public class Order {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public OrderStatus getOrderStatus() {
+        return status;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.status = orderStatus;
     }
 
     public String getSymbol() {

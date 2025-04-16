@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
     List<Order> findBySymbolAndSide(String symbol, String side);
     List<Order> findBySymbol(String symbol);
 
@@ -33,14 +34,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // ==== 2. High-Performance Querying ====
     // Find by Order ID (UUID, indexed)
-    Optional<Order> findByOrderId(String orderId);
+    Optional<Order> findByOrderId(Long orderId);
 
     // Get all open orders for a symbol (for OrderBook)
     List<Order> findBySymbolAndStatus(String symbol, OrderStatus status);
 
     // Get top 10 BUY/SELL orders (price-time priority)
     @Query("SELECT o FROM Order o WHERE o.symbol = :symbol AND o.side = :side AND o.status = 'OPEN' " +
-            "ORDER BY o.price DESC, o.timestamp ASC LIMIT 10")
+            "ORDER BY o.price DESC, o.createdAt ASC LIMIT 10")
     List<Order> findTopOrders(@Param("symbol") String symbol, @Param("side") String side);
 
 
@@ -64,6 +65,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("UPDATE Order o SET o.status = 'CANCELLED' WHERE o.symbol = :symbol")
     int cancelAllBySymbol(@Param("symbol") String symbol);
 
+    @Query("SELECT SUM(o.quantity) FROM Order o WHERE o.symbol = :symbol AND o.status = 'FILLED'")
+    Double getTradedVolume(@Param("symbol") String symbol) ;
+
 
     // ==== 5. Analytics & Monitoring ====
     // Count open orders by symbol
@@ -71,9 +75,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countOpenOrders(@Param("symbol") String symbol);
 
     // Get total traded volume (for dashboard)
-    @Query("SELECT SUM(o.quantity) FROM Order o WHERE o.symbol = :symbol AND o.status = 'FILLED'")
-     Double getTradedVolume(@Param("symbol") String symbol) ;
-
 
 
 
