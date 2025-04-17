@@ -5,6 +5,8 @@ import com.hft.dao.OrderStatus;
 import com.hft.exceptionhandling.OrderNotFoundException;
 import com.hft.repository.OrderRepository;
 import jakarta.persistence.OptimisticLockException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = "orderBook", key = "{#order.symbol, #order.side}")
+
     public Order placeOrder(Order order) {
         // Validate quantity
         if (order.getQuantity() <= 0) {
@@ -58,7 +62,11 @@ public class OrderService {
     public List<Order> getOpenOrdersForSymbol(String symbol) {
         return orderRepo.findBySymbolAndStatus(symbol, OrderStatus.OPEN);
     }
-
+    @Cacheable(value = "orders", key = "#orderId")
+    public Order getOrderById(Long orderId) {
+        return orderRepo.findById(orderId).orElseThrow();
+    }
+    @Cacheable(value = "orderBook", key = "{#symbol, #side}")  // Auto-caches
     public List<Order> getTopOrders(String symbol, String side) {
         return orderRepo.findTopOrders(symbol, side);  // Price-time priority
     }
